@@ -8,5 +8,5 @@ fun main(args: Array<String>) = runBlocking {
     }
 
     repeat(5) { println(channel.receive()) }
-    println("Done!")
+    println()
 }
