@@ -1,19 +1,19 @@
 import kotlinx.coroutines.*
 
 fun main() {
-    launchOnDefaultJobScope()
-    launchOnSupervisorJobScope()
+//    launchOnDefaultJobScope()
+//    launchOnSupervisorJobScope()
     launchAsyncOnDefaultJobScope()
     launchAsyncOnSupervisorScope()
-    launchSafeAsync()
+//    launchSafeAsync()
 }
 
 /**
  * 通常の Job を持った CoroutineScope で起動した場合
  */
 private fun launchOnDefaultJobScope() = runBlocking {
-    // Job を指定していない場合は CoroutineScope 初期化時に JOB を設定してくれるようになっている。
-    // 通常の JOB ではある子が失敗したら他の子に失敗が連鎖し動作がとまってしまうらしい
+    // Job を指定していない場合は CoroutineScope 初期化時に Job を設定してくれるようになっている。
+    // なので特に Job を指定しない場合には通常の Job で動作するようになる。
     val scope = CoroutineScope(Dispatchers.Default)
 
     scope.launch {
@@ -36,7 +36,7 @@ private fun launchAsyncOnDefaultJobScope() = runBlocking {
     val scope = CoroutineScope(Dispatchers.Default)
 
     // async を使って await したときに例外した場合には以下のように try catch で wrapping すると例外が拾える
-    // これで問題ないように見えるが async は1つの JOB になるので、ここで発生した例外はすべての 子 JOB に影響してしまう。
+    // これで問題ないように見えるが async は1つの Job になるので、ここで発生した例外はすべての 子 JOB に影響してしまう。
     scope.launch {
         try {
             async {
@@ -60,7 +60,7 @@ private fun launchAsyncOnDefaultJobScope() = runBlocking {
  * SupervisorJob を持った CoroutineScope で起動した場合
  */
 private fun launchOnSupervisorJobScope() = runBlocking {
-    // SupervisorJob を設定した場合はある JOB の失敗が他の JOB に連鎖しないようになる
+    // SupervisorJob を設定した場合は子の Job のエラーが他の Job に伝搬しないようになる
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     scope.launch {
@@ -78,12 +78,11 @@ private fun launchOnSupervisorJobScope() = runBlocking {
  * SupervisorJob を持った CoroutinesScope で aysnc を使って起動した場合
  */
 private fun launchAsyncOnSupervisorScope() = runBlocking {
-    // Job を指定していない場合は CoroutineScope 初期化時に JOB を設定してくれるようになっている。
-    // 通常の JOB ではある子が失敗したら他の子に失敗が連鎖し動作がとまってしまうらしい
+    // SupervisorJob を設定した場合は子の Job のエラーが他の Job に伝搬しないようになる
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     // async を使って await したときに例外した場合には以下のように try catch で wrapping すると例外が拾える
-    // これで問題ないように見えるが async は1つの JOB になるので、ここで発生した例外はすべての 子 JOB に影響してしまう。
+    // SupervisorJob なので async ブロック内で発生したエラーは他の Job に伝搬しない。
     scope.launch {
         try {
             async {
